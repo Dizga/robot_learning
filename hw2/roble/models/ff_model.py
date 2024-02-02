@@ -15,7 +15,7 @@ class FFModel(nn.Module, BaseModel):
         self._delta_network = ptu.build_mlp(
             input_size=self._ob_dim + self._ac_dim,
             output_size=self._ob_dim,
-            **params["network"]
+            params=self._network
         )
         self._delta_network.to(ptu.device)
         self._optimizer = optim.Adam(

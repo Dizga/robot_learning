@@ -14,7 +14,7 @@ import numpy as np
 class MBAgent(BaseAgent):
     import hw1.roble.util.class_util as classu
     @classu.hidden_member_initialize
-    def __init__(self, env, params):
+    def __init__(self, env, params, **kwargs):
         super(MBAgent, self).__init__()
 
         self._env = env.unwrapped
