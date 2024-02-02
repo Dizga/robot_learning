@@ -1,11 +1,13 @@
 from collections import OrderedDict
 import numpy as np
+import pandas as pd
 import time
 
 from IPython import embed
 import gym
 import torch, pickle
 from omegaconf import DictConfig, OmegaConf
+
 
 from hw1.roble.infrastructure import pytorch_util as ptu
 from hw1.roble.infrastructure.logging import Logger as TableLogger
@@ -143,13 +145,26 @@ class RL_Trainer(object):
 
                 # TODO: create a figure from the loss curve in idm_training_logs and add it to your report
                 figure = None
+
+                # logdir = self._params['logging']['logdir']
+
+                # df = pd.DataFrame(idm_training_logs)
+
+                # # Save to a CSV file
+                # df.to_csv(f'{logdir}/loss.csv', index=False)
                 
                 # Don't change
                 self._agent.reset_replay_buffer()
                 self._params['env']['expert_data'] = self._params['env']['expert_unlabelled_data']
+                # unlabelled_data = self.collect_training_trajectories(
+                #     itr,
+                #     initial_expertdata,
+                #     collect_policy,
+                #     self._params['alg']['batch_size']
+                # )
                 unlabelled_data = self.collect_training_trajectories(
                     itr,
-                    initial_expertdata,
+                    self._params['env']['expert_unlabelled_data'],
                     collect_policy,
                     self._params['alg']['batch_size']
                 )
@@ -159,9 +174,15 @@ class RL_Trainer(object):
                 path_list.pop(-2)
                 path_list[-1] = path_list[-1].replace("unlabelled", "labelled")
                 self._params['env']['expert_data'] = "/".join(path_list)
+                # labelled_data = self.collect_training_trajectories(
+                #     itr,
+                #     initial_expertdata,
+                #     collect_policy,
+                #     self._params['alg']['batch_size']
+                # )
                 labelled_data = self.collect_training_trajectories(
                     itr,
-                    initial_expertdata,
+                    "/".join(path_list),
                     collect_policy,
                     self._params['alg']['batch_size']
                 )
@@ -217,7 +238,14 @@ class RL_Trainer(object):
 
         print("\nCollecting data to be used for training...")
 
-        paths, envsteps_this_batch = TODO
+
+        if itr == 0:
+            with open(load_initial_expertdata, 'rb') as file: 
+                paths = pickle.load(file)
+            return paths, 0, None
+
+        paths, envsteps_this_batch = utils.sample_trajectories(self._env, collect_policy, batch_size, self._params['env']['max_episode_length'])
+
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
 
@@ -235,12 +263,12 @@ class RL_Trainer(object):
             # TODO sample some data from the data buffer
             # HINT1: use the agent's sample function
             # HINT2: how much data = self._params['train_batch_size']
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = TODO
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self._agent.sample(self._params['alg']['train_batch_size'])
 
             # TODO use the sampled data to train an agent
             # HINT: use the agent's train function
             # HINT: keep the agent's training log for debugging
-            train_log = TODO
+            train_log = self._agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
@@ -251,12 +279,12 @@ class RL_Trainer(object):
             # TODO sample some data from the data buffer
             # HINT1: use the agent's sample function
             # HINT2: how much data = self._params['train_batch_size']
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = TODO
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self._agent.sample(self._params['alg']['train_batch_size'])
 
             # TODO use the sampled data to train an agent
             # HINT: use the agent's train_idm function
             # HINT: keep the agent's training log for debugging
-            train_log = TODO
+            train_log = self._agent.train_idm(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
@@ -266,6 +294,10 @@ class RL_Trainer(object):
         # TODO relabel collected obsevations (from our policy) with labels from an expert policy
         # HINT: query the policy (using the get_action function) with paths[i]["observation"]
         # and replace paths[i]["action"] with these expert labels
+
+        for path in paths:
+            path["action"] = expert_policy.get_action(path["observation"])
+
         return paths
 
     ####################################
@@ -282,8 +314,8 @@ class RL_Trainer(object):
             if train_video_paths is not None:
                 #save train/eval videos
                 print('\nSaving train rollouts as videos...')
-                self._logger.log_paths_as_videos(train_video_paths, itr, fps=self._fps, max_videos_to_save=MAX_NVIDEO,
-                                            video_title='train_rollouts')
+                # self._logger.log_paths_as_videos(train_video_paths, itr, fps=self._fps, max_videos_to_save=MAX_NVIDEO,
+                #                             video_title='train_rollouts')
             print('\nCollecting video rollouts eval')
             eval_video_paths = utils.sample_n_trajectories(self._env, eval_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
             print('\nSaving eval rollouts as videos...')
@@ -295,6 +327,7 @@ class RL_Trainer(object):
             # returns, for logging
             train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
+            # vid_returns = [eval_path["reward"].sum() for eval_path in eval_video_paths]
             # episode lengths, for logging
             train_ep_lens = [len(path["reward"]) for path in paths]
             eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
@@ -306,6 +339,7 @@ class RL_Trainer(object):
             logs["eval_ep_lens"] = eval_ep_lens
             logs["train_returns"] = train_returns
             logs["eval_returns"] = eval_returns
+            # logs["vid_returns"] = vid_returns
             logs["Train_EnvstepsSoFar"] = self._total_envsteps
             logs["TimeSinceStart"] = time.time() - self._start_time
             last_log = training_logs[-1]  # Only use the last log for now

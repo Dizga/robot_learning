@@ -38,7 +38,29 @@ def build_mlp(
         output_activation = _str_to_activation[kwargs["params"]["output_activation"]]
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
-    raise NotImplementedError
+    layers = kwargs["params"]["layer_sizes"]
+    activation = [_str_to_activation[act] for act in kwargs["params"]["activations"]]
+
+    # Initialize the list of layers
+    mlp_layers = []
+
+    # Add the first layer (input to first hidden layer)
+    mlp_layers.append(nn.Linear(input_size, layers[0]))
+    mlp_layers.append(activation[0])
+
+    # Loop over the remaining hidden layers
+    for i in range(1, len(layers)):
+        # Add the hidden layer
+        mlp_layers.append(nn.Linear(layers[i-1], layers[i]))
+        # mlp_layers.append(nn.BatchNorm1d(layers[i]))
+        mlp_layers.append(activation[i])
+
+    # Add the output layer
+    mlp_layers.append(nn.Linear(layers[-1], output_size))
+    mlp_layers.append(output_activation)
+
+    # Create the sequential model
+    return nn.Sequential(*mlp_layers)
 
 device = None
 
