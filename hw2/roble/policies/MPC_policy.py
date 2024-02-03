@@ -25,6 +25,8 @@ class MPCPolicy(BasePolicy):
         self._low = self._ac_space.low
         self._high = self._ac_space.high
 
+        # self.models = dyn_models
+
         # Sampling strategy
         allowed_sampling = ('random', 'cem')
         assert self._mpc_action_sampling_strategy in allowed_sampling, f"self._mpc_action_sampling_strategy must be one of the following: {allowed_sampling}"
@@ -44,7 +46,8 @@ class MPCPolicy(BasePolicy):
             # TODO (Q1) uniformly sample trajectories and return an array of
             # dimensions (num_sequences, horizon, self._ac_dim) in the range
             # [self._low, self._high]
-            TODO
+            random_action_sequences = np.random.uniform(low=self._low, high=self._high,
+                                                        size=(num_sequences, horizon, self._ac_space.shape[0]))
             return random_action_sequences
         elif self._mpc_action_sampling_strategy == 'cem':
             # TODO(Q5): Implement action selection using CEM.
@@ -68,17 +71,20 @@ class MPCPolicy(BasePolicy):
             return cem_action[None]
         else:
             raise Exception(f"Invalid sample_strategy: {self._mpc_action_sampling_strategy}")
-
+        
     def evaluate_candidate_sequences(self, candidate_action_sequences, obs):
         # TODO(Q2): for each model in ensemble, compute the predicted sum of rewards
         # for each candidate action sequence.
         #
         # Then, return the mean predictions across all ensembles.
         # Hint: the return value should be an array of shape (N,)
-        for model in self._dyn_models:
-            pass
+        N, _, _ = candidate_action_sequences.shape
+        predicted_rewards = []
 
-        return TODO
+        for model in self._dyn_models:
+            predicted_rewards.append(self.calculate_sum_of_rewards(obs, candidate_action_sequences, model))
+
+        return np.array(predicted_rewards).mean(axis=0)
 
     def get_action(self, obs):
         if self._data_statistics is None:
@@ -94,8 +100,9 @@ class MPCPolicy(BasePolicy):
         else:
             predicted_rewards = self.evaluate_candidate_sequences(candidate_action_sequences, obs)
             # pick the action sequence and return the 1st element of that sequence
-            best_action_sequence = None  # TODO (Q2)
-            action_to_take = None  # TODO (Q2)
+            best_sequence_idx = np.argmax(predicted_rewards)
+            best_action_sequence = candidate_action_sequences[best_sequence_idx]
+            action_to_take = best_action_sequence[0]
             return action_to_take[None]  # Unsqueeze the first index
 
     def calculate_sum_of_rewards(self, obs, candidate_action_sequences, model):
@@ -123,4 +130,73 @@ class MPCPolicy(BasePolicy):
         # Hint: Remember that the model can process observations and actions
         #       in batch, which can be much faster than looping through each
         #       action sequence.
+
+        # obs_sequences = []
+        # obs_sequences.append(np.repeat(obs, candidate_action_sequences.shape[0]))
+
+        # cas = np.transpose(candidate_action_sequences, (1, 0, 2))
+        # for actions in cas:
+        #     predicted_obs = model(actions)
+        #     self._env.get_reward(predicted_obs, action)
+
+        # model
+        
+        # return sum_of_rewards
+
+
+
+        # N, H, _ = candidate_action_sequences.shape  # N: Number of sequences, H: Horizon
+        # sum_of_rewards = np.zeros(N)  # Initialize the sum of rewards for each sequence
+        
+        # # Iterate over each action sequence
+        # for i in range(N):
+        #     cumulative_reward = 0  # Initialize cumulative reward for the sequence
+        #     current_obs = obs.copy()  # Start with the initial observation
+            
+        #     # Iterate over each time step in the horizon
+        #     for h in range(H):
+        #         # Extract the current action from the sequence
+        #         action = candidate_action_sequences[i, h, :]
+                
+        #         # Predict the next state based on the current state and action
+        #         next_obs_pred = model.get_prediction(current_obs[None, :], action[None, :], self._data_statistics)
+                
+        #         # Calculate the reward for the predicted state and current action
+        #         reward, _ = self._env.get_reward(current_obs[None, :], action[None, :])
+                
+        #         cumulative_reward += reward  # Accumulate the reward
+                
+        #         # Update the current observation to the predicted next observation
+        #         current_obs = next_obs_pred.squeeze()  # Assuming next_obs_pred is of shape (1, D_obs)
+            
+        #     # Store the sum of rewards for this action sequence
+        #     sum_of_rewards[i] = cumulative_reward
+        
+        # return sum_of_rewards
+
+
+        N, H, _ = candidate_action_sequences.shape
+        # Transpose to shape (H, N, D_action) for batch processing across all sequences at each time step
+        candidate_action_sequences = candidate_action_sequences.transpose(1, 0, 2)
+
+        # Initialize the sum of rewards for each sequence
+        sum_of_rewards = np.zeros(N)
+
+        # Current_obs repeated for each sequence, shape will be (N, D_obs)
+        current_obs = np.tile(obs, (N, 1))
+
+        for h in range(H):
+            actions = candidate_action_sequences[h]  # Actions are now batched by the timestep
+
+            # Predict the next states for all sequences at once
+            next_obs_pred = model.get_prediction(current_obs, actions, self._data_statistics)
+
+            # Calculate rewards for all sequences at once
+            # Assuming the environment's get_reward function can process batched inputs
+            rewards, _ = self._env.get_reward(current_obs, actions)
+            sum_of_rewards += rewards.squeeze()  # Assuming rewards is returned with an extra dimension
+
+            # Update current_obs to the predicted next states for the next timestep
+            current_obs = next_obs_pred
+
         return sum_of_rewards

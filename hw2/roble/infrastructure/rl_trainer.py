@@ -279,7 +279,7 @@ class RL_Trainer(RL_Trainer):
         # plot the predictions
         self._fig.clf()
         for i in range(ob_dim):
-            plt.subplot(ob_dim/2, 2, i+1)
+            plt.subplot(int(ob_dim/2), 2, i+1)
             plt.plot(true_states[:,i], 'g')
             plt.plot(pred_states[:,i], 'r')
         self._fig.suptitle('MPE: ' + str(mpe))
