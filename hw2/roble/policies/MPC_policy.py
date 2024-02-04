@@ -176,27 +176,17 @@ class MPCPolicy(BasePolicy):
 
 
         N, H, _ = candidate_action_sequences.shape
-        # Transpose to shape (H, N, D_action) for batch processing across all sequences at each time step
         candidate_action_sequences = candidate_action_sequences.transpose(1, 0, 2)
-
-        # Initialize the sum of rewards for each sequence
         sum_of_rewards = np.zeros(N)
-
-        # Current_obs repeated for each sequence, shape will be (N, D_obs)
         current_obs = np.tile(obs, (N, 1))
 
         for h in range(H):
-            actions = candidate_action_sequences[h]  # Actions are now batched by the timestep
-
-            # Predict the next states for all sequences at once
+            actions = candidate_action_sequences[h]
             next_obs_pred = model.get_prediction(current_obs, actions, self._data_statistics)
 
-            # Calculate rewards for all sequences at once
-            # Assuming the environment's get_reward function can process batched inputs
             rewards, _ = self._env.get_reward(current_obs, actions)
-            sum_of_rewards += rewards.squeeze()  # Assuming rewards is returned with an extra dimension
+            sum_of_rewards += rewards.squeeze()
 
-            # Update current_obs to the predicted next states for the next timestep
             current_obs = next_obs_pred
 
         return sum_of_rewards

@@ -73,6 +73,8 @@ class Obstacles(gym.Env):
         #clear
         self.counter = 0
         self.plt.clf()
+        # self.plt.close(self.fig)
+        # self.fig = self.plt.figure()
 
         #return
         return self._get_obs()
@@ -189,6 +191,7 @@ class Obstacles(gym.Env):
         self.fig.canvas.draw()
         img = np.fromstring(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
         img = img.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+        # img = img.reshape(960,1280,3)
         return img
 
     def is_valid(self, dat):

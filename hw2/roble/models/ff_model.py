@@ -77,8 +77,11 @@ class FFModel(nn.Module, BaseModel):
         obs_unnormalized = ptu.from_numpy(obs_unnormalized)
         acs_unnormalized = ptu.from_numpy(acs_unnormalized)
 
-        obs_normalized = (obs_unnormalized - self._obs_mean) / self._obs_std
-        acs_normalized = (acs_unnormalized - self._acs_mean) / self._acs_std
+        obs_normalized = normalize(obs_unnormalized, self._obs_mean, self._obs_std)
+        acs_normalized = normalize(acs_unnormalized, self._acs_mean, self._acs_std)
+
+        # obs_normalized = (obs_unnormalized - self._obs_mean) / self._obs_std
+        # acs_normalized = (acs_unnormalized - self._acs_mean) / self._acs_std
 
         # predicted change in obs
         concatenated_input = torch.cat([obs_normalized, acs_normalized], dim=1)
@@ -86,8 +89,11 @@ class FFModel(nn.Module, BaseModel):
         # TODO(Q1) compute delta_pred_normalized and next_obs_pred
         # Hint: as described in the PDF, the output of the network is the
         # *normalized change* in state, i.e. normalized(s_t+1 - s_t).
+
         delta_pred_normalized = self._delta_network(concatenated_input)
-        delta_pred = delta_pred_normalized * self._delta_std + self._delta_mean
+        delta_pred = unnormalize(delta_pred_normalized, self._delta_mean, self._delta_std)
+        # delta_pred = delta_pred_normalized * self._delta_std + self._delta_mean
+
         next_obs_pred = obs_unnormalized + delta_pred
         return next_obs_pred, delta_pred_normalized
         
@@ -154,12 +160,16 @@ class FFModel(nn.Module, BaseModel):
         # Hint: `self(...)` returns a tuple, but you only need to use one of the
         # outputs.
 
-        true_delta = next_observations - observations
-
-        target_norm = (true_delta - true_delta.mean()) / true_delta.std()
-        target_norm = ptu.from_numpy(target_norm)
-
         self.update_statistics(**data_statistics)
+
+        true_delta = ptu.from_numpy(next_observations - observations)
+        # target_norm = (true_delta - self._delta_mean) / self._delta_std
+        target_norm = normalize(true_delta, self._delta_mean, self._delta_std)
+
+        # target_norm = (true_delta - true_delta.mean()) / true_delta.std()
+        # target_norm = ptu.from_numpy(target_norm)
+
+        
     
         _, delta_pred_norm = self(observations, actions, **data_statistics)
 

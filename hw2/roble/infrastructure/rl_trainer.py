@@ -129,6 +129,7 @@ class RL_Trainer(RL_Trainer):
                 if self._params['logging']['save_params']:
                     self._agent.save('{}/agent_itr_{}.pt'.format(self._params['logging']['logdir'], itr))
         
+        self.plot_return()
         return self._logger.get_table_dict()
 
     def collect_training_trajectories(
@@ -292,3 +293,23 @@ class RL_Trainer(RL_Trainer):
         plt.plot(all_losses)
         self._fig.savefig(self._params['logging']['logdir']+'/itr_'+str(itr)+'_losses.png', dpi=200, bbox_inches='tight')
 
+
+    def plot_return(self):
+        import matplotlib.pyplot as plt
+        self._fig = plt.figure()
+
+        eval_returns = self._logger.get_table_dict()['trainer/Eval_AverageReturn']
+        train_returns = self._logger.get_table_dict()['trainer/Train_AverageReturn']
+        x_values = np.arange(1,1+len(eval_returns))
+
+        plt.plot(x_values, eval_returns, 'go-', label='Evaluation Returns')
+        plt.plot(x_values, train_returns, 'bo-', label='Training Returns')
+
+        plt.legend()
+
+        plt.title('Training and Evaluation Returns Over Time')
+        plt.xlabel('Epoch')
+        plt.ylabel('Average Return')
+        plt.xticks(np.arange(1,1+len(eval_returns)))
+
+        self._fig.savefig(self._params['logging']['logdir']+'/returns.png', dpi=200, bbox_inches='tight')
