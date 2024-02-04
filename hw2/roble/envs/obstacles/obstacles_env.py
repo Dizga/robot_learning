@@ -5,6 +5,8 @@ from gym import spaces
 class Obstacles(gym.Env):
     def __init__(self, start=[-0.5, 0.75], end=[0.7, -0.8], random_starts=True):
 
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt #inside, so doesnt get imported when not using this env
         self.plt = plt
 
@@ -72,9 +74,9 @@ class Obstacles(gym.Env):
 
         #clear
         self.counter = 0
-        self.plt.clf()
-        # self.plt.close(self.fig)
-        # self.fig = self.plt.figure()
+        # self.plt.clf()
+        self.plt.close(self.fig)
+        self.fig = self.plt.figure()
 
         #return
         return self._get_obs()

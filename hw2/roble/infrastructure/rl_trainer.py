@@ -310,6 +310,6 @@ class RL_Trainer(RL_Trainer):
         plt.title('Training and Evaluation Returns Over Time')
         plt.xlabel('Epoch')
         plt.ylabel('Average Return')
-        plt.xticks(np.arange(1,1+len(eval_returns)))
+        plt.xticks(x_values)
 
         self._fig.savefig(self._params['logging']['logdir']+'/returns.png', dpi=200, bbox_inches='tight')

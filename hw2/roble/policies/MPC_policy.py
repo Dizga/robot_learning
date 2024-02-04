@@ -54,6 +54,55 @@ class MPCPolicy(BasePolicy):
             # Begin with randomly selected actions, then refine the sampling distribution
             # iteratively as described in Section 3.3, "Iterative Random-Shooting with Refinement" of
             # https://arxiv.org/pdf/1909.11652.pdf
+
+            for i in range(self._cem_iterations):
+                # - Sample candidate sequences from a Gaussian with the current
+                #   elite mean and variance
+                #     (Hint: remember that for the first iteration, we instead sample
+                #      uniformly at random just like we do for random-shooting)
+                # - Get the top `self._cem_num_elites` elites
+                #     (Hint: what existing function can we use to compute rewards for
+                #      our candidate sequences in order to rank them?)
+                # - Update the elite mean and variance
+                
+                if i == 0:
+                    candidates = np.random.uniform(low=self._low, high=self._high,
+                                                        size=(num_sequences, horizon, self._ac_space.shape[0]))
+                else:
+                    candidates = np.random.normal(elites_mean, elites_std,(num_sequences, horizon, self._ac_space.shape[0]))
+            
+                scores = self.evaluate_candidate_sequences(candidates, obs)
+
+                elites_ids = scores.argsort()[-self._cem_num_elites:]
+
+                elites = candidates[elites_ids]
+
+                elites_mean = elites.mean(axis=0)
+                elites_std = elites.mean(axis=0)
+
+                
+
+            # TODO(Q5): Set `cem_action` to the appropriate action sequence chosen by CEM.
+            # The shape should be (horizon, self._ac_dim)  
+            cem_action = elites_mean
+            return cem_action[None]
+        else:
+            raise Exception(f"Invalid sample_strategy: {self._mpc_action_sampling_strategy}")
+        
+    def sample_action_sequences(self, num_sequences, horizon, obs=None):
+        if self._mpc_action_sampling_strategy == 'random' \
+            or (self._mpc_action_sampling_strategy == 'cem' and obs is None):
+            # TODO (Q1) uniformly sample trajectories and return an array of
+            # dimensions (num_sequences, horizon, self._ac_dim) in the range
+            # [self._low, self._high]
+            random_action_sequences = np.random.uniform(low=self._low, high=self._high,
+                                                        size=(num_sequences, horizon, self._ac_space.shape[0]))
+            return random_action_sequences
+        elif self._mpc_action_sampling_strategy == 'cem':
+            # TODO(Q5): Implement action selection using CEM.
+            # Begin with randomly selected actions, then refine the sampling distribution
+            # iteratively as described in Section 3.3, "Iterative Random-Shooting with Refinement" of
+            # https://arxiv.org/pdf/1909.11652.pdf
             for i in range(self._cem_iterations):
                 # - Sample candidate sequences from a Gaussian with the current
                 #   elite mean and variance
