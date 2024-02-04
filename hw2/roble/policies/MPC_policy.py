@@ -89,38 +89,6 @@ class MPCPolicy(BasePolicy):
         else:
             raise Exception(f"Invalid sample_strategy: {self._mpc_action_sampling_strategy}")
         
-    def sample_action_sequences(self, num_sequences, horizon, obs=None):
-        if self._mpc_action_sampling_strategy == 'random' \
-            or (self._mpc_action_sampling_strategy == 'cem' and obs is None):
-            # TODO (Q1) uniformly sample trajectories and return an array of
-            # dimensions (num_sequences, horizon, self._ac_dim) in the range
-            # [self._low, self._high]
-            random_action_sequences = np.random.uniform(low=self._low, high=self._high,
-                                                        size=(num_sequences, horizon, self._ac_space.shape[0]))
-            return random_action_sequences
-        elif self._mpc_action_sampling_strategy == 'cem':
-            # TODO(Q5): Implement action selection using CEM.
-            # Begin with randomly selected actions, then refine the sampling distribution
-            # iteratively as described in Section 3.3, "Iterative Random-Shooting with Refinement" of
-            # https://arxiv.org/pdf/1909.11652.pdf
-            for i in range(self._cem_iterations):
-                # - Sample candidate sequences from a Gaussian with the current
-                #   elite mean and variance
-                #     (Hint: remember that for the first iteration, we instead sample
-                #      uniformly at random just like we do for random-shooting)
-                # - Get the top `self._cem_num_elites` elites
-                #     (Hint: what existing function can we use to compute rewards for
-                #      our candidate sequences in order to rank them?)
-                # - Update the elite mean and variance
-                pass
-
-            # TODO(Q5): Set `cem_action` to the appropriate action sequence chosen by CEM.
-            # The shape should be (horizon, self._ac_dim)  
-            cem_action = None
-            return cem_action[None]
-        else:
-            raise Exception(f"Invalid sample_strategy: {self._mpc_action_sampling_strategy}")
-        
     def evaluate_candidate_sequences(self, candidate_action_sequences, obs):
         # TODO(Q2): for each model in ensemble, compute the predicted sum of rewards
         # for each candidate action sequence.
