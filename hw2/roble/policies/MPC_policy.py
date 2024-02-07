@@ -78,7 +78,7 @@ class MPCPolicy(BasePolicy):
                 elites = candidates[elites_ids]
 
                 elites_mean = elites.mean(axis=0)
-                elites_std = elites.mean(axis=0)
+                elites_std = elites.std(axis=0)
 
                 
 

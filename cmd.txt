@@ -52,3 +52,18 @@ alg.n_iter=15
 logging.video_log_freq=14
 
 env.exp_name=q3_cheetah env.env_name=cheetah-roble-v0 alg.mpc_horizon=15  alg.num_agent_train_steps_per_iter=1500 alg.batch_size_initial=5000 alg.batch_size=5000 alg.n_iter=20 logging.video_log_freq=-1
+
+
+env.exp_name=q5_cheetah_cem_2
+env.env_name='cheetah-roble-v0'
+alg.mpc_horizon=15
+alg.add_sl_noise=true
+alg.num_agent_train_steps_per_iter=1500
+alg.batch_size_initial=5000
+alg.batch_size=5000
+alg.n_iter=5
+logging.video_log_freq=4
+alg.mpc_action_sampling_strategy='cem'
+alg.cem_iterations=2
+
+python run_hw2_mb.py env.exp_name=q5_cheetah_cem_2 env.env_name='cheetah-roble-v0' alg.mpc_horizon=15 alg.add_sl_noise=true alg.num_agent_train_steps_per_iter=1500 alg.batch_size_initial=5000 alg.batch_size=5000 alg.n_iter=5 logging.video_log_freq=4 alg.mpc_action_sampling_strategy='cem' cem_iterations=2
