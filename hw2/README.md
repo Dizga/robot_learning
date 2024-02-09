@@ -29,7 +29,7 @@ python run_hw2_mb.py env.exp_name=q2_obstacles_singleiteration env.env_name=obst
 
 MBRL run on obstacles env.
 ```
-python run_hw2_mb.py env.exp_name=q3_obstacles env.env_name=obstacles-roble-v0 alg.num_agent_train_steps_per_iter=20 alg.batch_size_initial=5000 alg.batch_size=1000 alg.mpc_horizon=10 alg.n_iter=12 logging.video_log_freq=11
+python run_hw2_mb.py env.exp_name=q3_obstacles env.env_name=obstacles-roble-v0 alg.num_agent_train_steps_per_iter=20 alg.batch_size_initial=5000 alg.batch_size=2000 alg.mpc_horizon=10 alg.n_iter=12 logging.video_log_freq=11
 ```
 
 MBRL run on reacher env.
