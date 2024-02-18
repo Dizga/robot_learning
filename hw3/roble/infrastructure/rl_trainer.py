@@ -13,6 +13,7 @@ from hw1.roble.infrastructure import utils
 from hw3.roble.agents.dqn_agent import DQNAgent
 from hw3.roble.agents.ddpg_agent import DDPGAgent
 from hw3.roble.infrastructure.dqn_utils import (
+        get_env_kwargs,
         get_wrapper_by_name,
         register_custom_envs,
 )
@@ -37,11 +38,13 @@ class RL_Trainer(RL_Trainer):
         #############
         ## ENV
         #############
+        self.add_wrappers()
 
         
     def add_wrappers(self):
         # Make the gym environment
-        if 'env_wrappers' in self._params:
+        env_params = get_env_kwargs(self._params['env']['env_name'])
+        if 'env_wrappers' in env_params:
             # These operations are currently only for Atari envs
             self._env = wrappers.Monitor(
                 self._env,
@@ -49,7 +52,7 @@ class RL_Trainer(RL_Trainer):
                 force=True,
                 video_callable=(None if self._params['logging']['video_log_freq'] > 0 else False),
             )
-            self._env = params['env_wrappers'](self._env)
+            self._env = env_params['env_wrappers'](self._env)
         if 'non_atari_colab_env' in self._params and self._params['logging']['video_log_freq'] > 0:
             self._env = wrappers.Monitor(
                 self._env,
@@ -143,7 +146,7 @@ class RL_Trainer(RL_Trainer):
 #                elif isinstance(self._agent, DDPGAgent):
 #                    self.perform_ddpg_logging(itr, all_logs)
                 
-                self.perform_logging(itr, eval_policy, all_logs)
+                # self.perform_logging(itr, eval_policy, all_logs)
 
                 if self._params['logging']['save_params']:
                     self._agent.save('{}/agent_itr_{}.pt'.format(self._params['logging']['logdir'], itr))
@@ -153,7 +156,12 @@ class RL_Trainer(RL_Trainer):
         return results
 
     def train_agent(self):
-        # TODO: get this from hw1 or hw2
+        print('\nTraining agent using sampled data from replay buffer...')
+        all_logs = []
+        for train_step in range(self._params['alg']['num_agent_train_steps_per_iter']):
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self._agent.sample(self._params['alg']['train_batch_size'])
+            train_log = self._agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
+            all_logs.append(train_log)
         return all_logs
 
     ####################################
@@ -261,7 +269,8 @@ class RL_Trainer(RL_Trainer):
         
         paths, envsteps_this_batch, train_video_paths = (
                     self.collect_training_trajectories(
-                        itr, 
+                        itr,
+                        load_initial_expertdata = False, 
                         collect_policy=eval_policy, 
                         batch_size=self._params['alg']['eval_batch_size'])
                 )

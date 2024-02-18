@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import os
 import numpy as np
 import pandas as pd
 import time
@@ -83,6 +84,7 @@ class RL_Trainer(object):
         # combined_params.update(self._params["env"])
             
         env_params = get_env_kwargs(self._params['env']['env_name'])
+        self.add_wrappers()
 
         merged_params = {**self._params["env"], **self._params["alg"], **env_params}
         self._agent = agent_class(self._env, **merged_params)
@@ -90,6 +92,33 @@ class RL_Trainer(object):
 
 
         # self._agent = agent_class(self._env, **combined_params)
+
+    def add_wrappers(self):
+        # Make the gym environment
+        env_params = get_env_kwargs(self._params['env']['env_name'])
+        if 'env_wrappers' in env_params:
+            # These operations are currently only for Atari envs
+            self._env = gym.Wrapper.Monitor(
+                self._env,
+                os.path.join(self._params['logging']['logdir'], "gym"),
+                force=True,
+                video_callable=(None if self._params['logging']['video_log_freq'] > 0 else False),
+            )
+            self._env = env_params['env_wrappers'](self._env)
+        if 'non_atari_colab_env' in self._params and self._params['logging']['video_log_freq'] > 0:
+            self._env = gym.Wrapper.Monitor(
+                self._env,
+                os.path.join(self._params['logging']['logdir'], "gym"),
+                force=True,
+                video_callable=(None if self._params['logging']['video_log_freq'] > 0 else False),
+            )
+        self._mean_episode_reward = -float('nan')
+        self._best_mean_episode_reward = -float('inf')
+
+        # import plotting (locally if 'obstacles' env)
+        if not(self._params['env']['env_name']=='obstacles-roble-v0'):
+            import matplotlib
+            matplotlib.use('Agg')
         
     def create_env(self, env_name, seed):
         import pybullet_envs
