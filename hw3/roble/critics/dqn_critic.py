@@ -10,24 +10,26 @@ class DQNCritic(BaseCritic):
     import hw1.roble.util.class_util as classu
     @classu.hidden_member_initialize
     def __init__(self, optimizer_spec, **kwargs):
-        super().__init__(**kwargs)
+        # super().__init__(**kwargs)
+        super().__init__()
         # self.env_name = agent_params['env']['env_name']
-        self.ob_dim = agent_params['alg']['ob_dim']
+        # self.ob_dim = agent_params['alg']['ob_dim']
 
-        if isinstance(self.ob_dim, int):
-            self.input_shape = (self.ob_dim,)
-        else:
-            self.input_shape = agent_params['input_shape']
+        if isinstance(self._ob_dim, int):
+            self._input_shape = (self._ob_dim,)
+        # else:
+            # self.input_shape = agent_params['input_shape']
 
-        self.ac_dim = agent_params['alg']['ac_dim']
-        self.double_q = agent_params['alg']['double_q']
-        self.grad_norm_clipping = agent_params['alg']['grad_norm_clipping']
-        self.gamma = agent_params['alg']['gamma']
+        # self.ac_dim = agent_params['alg']['ac_dim']
+        # self.double_q = agent_params['alg']['double_q']
+        # self.grad_norm_clipping = agent_params['alg']['grad_norm_clipping']
+        # self.gamma = agent_params['alg']['gamma']
 
         self.optimizer_spec = optimizer_spec
-        network_initializer = agent_params['q_func']
-        self.q_net = network_initializer(self.ob_dim, self.ac_dim)
-        self.q_net_target = network_initializer(self.ob_dim, self.ac_dim)
+        # network_initializer = agent_params['q_func']
+        network_initializer = self._q_func
+        self.q_net = network_initializer(self._ob_dim, self._ac_dim)
+        self.q_net_target = network_initializer(self._ob_dim, self._ac_dim)
         self.optimizer = self.optimizer_spec.constructor(
             self.q_net.parameters(),
             **self.optimizer_spec.optim_kwargs

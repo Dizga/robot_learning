@@ -8,31 +8,56 @@ class DQNAgent(object):
     
     import hw1.roble.util.class_util as classu
     @classu.hidden_member_initialize
+    # def __init__(self, env, agent_params):
     def __init__(self, env, **kwargs):
 
         self.env = env
-        self.agent_params = agent_params
-        self.batch_size = agent_params['alg']['train_batch_size']
+        # self.agent_params = agent_params
+        # self.batch_size = agent_params['alg']['train_batch_size']
         # import ipdb; ipdb.set_trace()
-        self.last_obs = self.env.reset()
+        self._last_obs = self.env.reset()
 
-        self.num_actions = self.env.action_space.n
-        self.learning_starts = agent_params['alg']['learning_starts']
-        self.learning_freq = agent_params['alg']['learning_freq']
-        self.target_update_freq = agent_params['alg']['target_update_freq']
+        self._num_actions = self.env.action_space.n
+        # self.learning_starts = agent_params['alg']['learning_starts']
+        # self.learning_freq = agent_params['alg']['learning_freq']
+        # self.target_update_freq = agent_params['alg']['target_update_freq']
 
-        self.replay_buffer_idx = None
-        self.exploration = agent_params['exploration_schedule']
-        self.optimizer_spec = agent_params['optimizer_spec']
+        self._replay_buffer_idx = None
+        # self.exploration = agent_params['exploration_schedule']
+        # self.optimizer_spec = agent_params['optimizer_spec']
 
-        self.critic = DQNCritic(agent_params, self.optimizer_spec)
-        self.actor = ArgMaxPolicy(self.critic)
+        self._critic = DQNCritic(**kwargs)
+        self._actor = ArgMaxPolicy(self._critic)
 
-        lander = agent_params['env']['env_name'].startswith('LunarLander')
-        self.replay_buffer = MemoryOptimizedReplayBuffer(
-            agent_params['alg']['replay_buffer_size'], agent_params['alg']['frame_history_len'], lander=lander)
-        self.t = 0
-        self.num_param_updates = 0
+        lander = self._env_name.startswith('LunarLander')
+        self._replay_buffer = MemoryOptimizedReplayBuffer(
+            self._replay_buffer_size, self._frame_history_len, lander=lander)
+        self._t = 0
+        self._num_param_updates = 0
+
+        # self.env = env
+        # self.agent_params = self._params
+        # self.batch_size = self._params['alg']['train_batch_size']
+        # # import ipdb; ipdb.set_trace()
+        # self.last_obs = self.env.reset()
+
+        # self.num_actions = self.env.action_space.n
+        # self.learning_starts = agent_params['alg']['learning_starts']
+        # self.learning_freq = agent_params['alg']['learning_freq']
+        # self.target_update_freq = agent_params['alg']['target_update_freq']
+
+        # self.replay_buffer_idx = None
+        # self.exploration = agent_params['exploration_schedule']
+        # self.optimizer_spec = agent_params['optimizer_spec']
+
+        # self.critic = DQNCritic(agent_params, self.optimizer_spec)
+        # self.actor = ArgMaxPolicy(self.critic)
+
+        # lander = agent_params['env']['env_name'].startswith('LunarLander')
+        # self.replay_buffer = MemoryOptimizedReplayBuffer(
+        #     agent_params['alg']['replay_buffer_size'], agent_params['alg']['frame_history_len'], lander=lander)
+        # self.t = 0
+        # self.num_param_updates = 0
 
     def add_to_replay_buffer(self, paths):
         pass
@@ -50,15 +75,15 @@ class DQNAgent(object):
             # in dqn_utils.py
         self.replay_buffer_idx = -1
 
-        eps = self.exploration.value(self.t)
+        eps = self._exploration_schedule.value(self._t)
 
         # TODO use epsilon greedy exploration when selecting action
-        perform_random_action = TODO
+        perform_random_action = np.random.random() < eps
         if perform_random_action:
             # HINT: take random action 
                 # with probability eps (see np.random.random())
                 # OR if your current step number (see self.t) is less that self.learning_starts
-            action = TODO
+            action = self.env.action_space.sample()
         else:
             # HINT: Your actor will take in multiple previous observations ("frames") in order
                 # to deal with the partial observability of the environment. Get the most recent 

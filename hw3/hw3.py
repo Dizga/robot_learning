@@ -4,6 +4,7 @@ import sys
 import comet_ml
 import hydra, json
 
+from hw3.roble.agents.dqn_agent import DQNAgent
 from hw3.roble.agents.ddpg_agent import DDPGAgent
 from hw3.roble.agents.td3_agent import TD3Agent
 from hw3.roble.agents.sac_agent import SACAgent

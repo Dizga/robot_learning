@@ -11,6 +11,7 @@ from omegaconf import DictConfig, OmegaConf
 from hw1.roble.infrastructure import pytorch_util as ptu
 from hw1.roble.infrastructure.logging import Logger as TableLogger
 from hw1.roble.infrastructure import utils
+from hw3.roble.infrastructure.dqn_utils import get_env_kwargs
 
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 1
@@ -78,14 +79,17 @@ class RL_Trainer(object):
         ## AGENT
         #############
         ## the **self._params['alg'] is a hack to allow new updates to use kwargs nicely
-        combined_params = dict(self._params['alg'].copy())
-        combined_params.update(self._params["env"])
+        # combined_params = dict(self._params['alg'].copy())
+        # combined_params.update(self._params["env"])
+            
+        env_params = get_env_kwargs(self._params['env']['env_name'])
 
-        # merged_params = {**self._params["env"], **self._params["alg"]}
-        # self._agent = agent_class(self._env, **merged_params)
+        merged_params = {**self._params["env"], **self._params["alg"], **env_params}
+        self._agent = agent_class(self._env, **merged_params)
+        # self._agent = agent_class(self._env, self._params)
 
 
-        self._agent = agent_class(self._env, **combined_params)
+        # self._agent = agent_class(self._env, **combined_params)
         
     def create_env(self, env_name, seed):
         import pybullet_envs
