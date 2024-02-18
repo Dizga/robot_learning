@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import time
 
-from IPython import embed
 import gym
 import torch, pickle
 from omegaconf import DictConfig, OmegaConf
@@ -79,17 +78,27 @@ class RL_Trainer(object):
         ## AGENT
         #############
         ## the **self._params['alg'] is a hack to allow new updates to use kwargs nicely
-        self._agent = agent_class(self._env, self._params['alg'], **self._params["env"])
+        combined_params = dict(self._params['alg'].copy())
+        combined_params.update(self._params["env"])
+
+        # merged_params = {**self._params["env"], **self._params["alg"]}
+        # self._agent = agent_class(self._env, **merged_params)
+
+
+        self._agent = agent_class(self._env, **combined_params)
         
     def create_env(self, env_name, seed):
         import pybullet_envs
         self._env = gym.make(env_name)
+        self._eval_env = gym.make(env_name)
         self._env.seed(seed)
+        self._eval_env.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
         print ("self._env:", self._env)
         
-        
+    def set_comet_logger(self, logger):
+        self._logger.set_comet_logger(logger)
 
     def run_training_loop(self, n_iter, collect_policy, eval_policy,
                         initial_expertdata=None, relabel_with_expert=False,
@@ -212,9 +221,9 @@ class RL_Trainer(object):
     def collect_training_trajectories(
             self,
             itr,
-            load_initial_expertdata,
-            collect_policy,
-            batch_size,
+            load_initial_expertdata=False,
+            collect_policy=None,
+            batch_size=0,
     ):
         """
         :param itr:
@@ -238,21 +247,25 @@ class RL_Trainer(object):
 
         print("\nCollecting data to be used for training...")
 
-
         if itr == 0:
-            with open(load_initial_expertdata, 'rb') as file: 
-                paths = pickle.load(file)
-            return paths, 0, None
+            if load_initial_expertdata:
+                paths = pickle.load(open(self._params['env']['expert_data'], 'rb'))
+                return paths, 0, None
+            else:
+                num_transitions_to_sample = self._params['alg']['batch_size_initial']
+        else:
+            num_transitions_to_sample = self._params['alg']['batch_size']
 
-        paths, envsteps_this_batch = utils.sample_trajectories(self._env, collect_policy, batch_size, self._params['env']['max_episode_length'])
-
+        print("\nCollecting data to be used for training...")
+        paths, envsteps_this_batch = utils.sample_trajectories(
+            self._env, collect_policy, num_transitions_to_sample, self._params['env']['max_episode_length'])
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
 
         train_video_paths = None
         if self._log_video:
             print('\nCollecting train rollouts to be used for saving videos...')
-            ## TODO look in utils and implement sample_n_trajectories
+
             train_video_paths = utils.sample_n_trajectories(self._env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
         return paths, envsteps_this_batch, train_video_paths
 
@@ -307,7 +320,9 @@ class RL_Trainer(object):
 
         # collect eval trajectories, for logging
         print("\nCollecting data for eval...")
-        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self._env, eval_policy, self._params['alg']['eval_batch_size'], self._params['env']['max_episode_length'])
+        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self._env, eval_policy, 
+                                                                         self._params['alg']['eval_batch_size'], 
+                                                                         self._params['env']['max_episode_length'])
 
         # save eval rollouts as videos in the video folder (for grading)
         if self._log_video:
@@ -349,6 +364,7 @@ class RL_Trainer(object):
             if itr == 0:
                 self._initial_return = np.mean(train_returns)
             logs["Initial_DataCollection_AverageReturn"] = self._initial_return
+            logs["step"] = itr
 
             for key in logs.keys():
                 value = utils.flatten(logs[key])
