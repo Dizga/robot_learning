@@ -35,7 +35,7 @@ class RL_Trainer(RL_Trainer):
 
         # Make the gym environment
         print (self._env) 
-        self.add_wrappers()
+        # self.add_wrappers()
 
         # Are the observations images?
         img = len(self._env.observation_space.shape) > 2
@@ -89,11 +89,11 @@ class RL_Trainer(RL_Trainer):
 
             # decide if metrics should be logged
             if self._params['logging']['scalar_log_freq'] == -1:
-                self._logmetrics = False
+                self._log_metrics = False
             elif itr % self._params['logging']['scalar_log_freq'] == 0:
-                self._logmetrics = True
+                self._log_metrics = True
             else:
-                self._logmetrics = False
+                self._log_metrics = False
 
             use_batchsize = self._params['alg']['batch_size']
             if itr == 0:
@@ -121,7 +121,7 @@ class RL_Trainer(RL_Trainer):
                 self.log_model_predictions(itr, all_logs)
 
             # log/save
-            if self._log_video or self._logmetrics:
+            if self._log_video or self._log_metrics:
                 # perform logging
                 print('\nBeginning logging procedure...')
                 self.perform_logging(itr, paths, eval_policy, train_video_paths, all_logs)
@@ -217,7 +217,7 @@ class RL_Trainer(RL_Trainer):
         #######################
 
         # save eval metrics
-        if self._logmetrics:
+        if self._log_metrics:
             # returns, for logging
             train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
@@ -240,10 +240,10 @@ class RL_Trainer(RL_Trainer):
             logs["Train_MinReturn"] = np.min(train_returns)
             logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
 
-            logs["Train_EnvstepsSoFar"] = self._total_envsteps
-            logs["Train_AverageRewardSoFar"] = self._total_train_rewards / self._total_envsteps
-            logs["Eval_AverageRewardSoFar"] = self._total_eval_rewards / self._total_envsteps
-            logs["TimeSinceStart"] = time.time() - self._start_time
+            # logs["Train_EnvstepsSoFar"] = self._total_envsteps
+            # logs["Train_AverageRewardSoFar"] = self._total_train_rewards / self._total_envsteps
+            # logs["Eval_AverageRewardSoFar"] = self._total_eval_rewards / self._total_envsteps
+            # logs["TimeSinceStart"] = time.time() - self._start_time
             logs.update(last_log)
 
             if itr == 0:

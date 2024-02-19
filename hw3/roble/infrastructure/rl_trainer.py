@@ -21,7 +21,7 @@ from hw2.roble.infrastructure.rl_trainer import RL_Trainer
 
 # how many rollouts to save as videos
 MAX_NVIDEO = 1
-MAX_VIDEO_LEN = 40 # we overwrite this in the code below
+MAX_VIDEO_LEN = 80 # we overwrite this in the code below
 
 class RL_Trainer(RL_Trainer):
     import hw1.roble.util.class_util as classu
@@ -38,7 +38,7 @@ class RL_Trainer(RL_Trainer):
         #############
         ## ENV
         #############
-        self.add_wrappers()
+        # self.add_wrappers()
 
         
     def add_wrappers(self):
@@ -146,7 +146,7 @@ class RL_Trainer(RL_Trainer):
 #                elif isinstance(self._agent, DDPGAgent):
 #                    self.perform_ddpg_logging(itr, all_logs)
                 
-                # self.perform_logging(itr, eval_policy, all_logs)
+                self.perform_logging(itr, eval_policy, all_logs)
 
                 if self._params['logging']['save_params']:
                     self._agent.save('{}/agent_itr_{}.pt'.format(self._params['logging']['logdir'], itr))
@@ -156,7 +156,7 @@ class RL_Trainer(RL_Trainer):
         return results
 
     def train_agent(self):
-        print('\nTraining agent using sampled data from replay buffer...')
+        # print('\nTraining agent using sampled data from replay buffer...')
         all_logs = []
         for train_step in range(self._params['alg']['num_agent_train_steps_per_iter']):
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self._agent.sample(self._params['alg']['train_batch_size'])
@@ -269,7 +269,7 @@ class RL_Trainer(RL_Trainer):
         
         paths, envsteps_this_batch, train_video_paths = (
                     self.collect_training_trajectories(
-                        itr,
+                         itr,
                         load_initial_expertdata = False, 
                         collect_policy=eval_policy, 
                         batch_size=self._params['alg']['eval_batch_size'])

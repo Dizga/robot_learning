@@ -71,7 +71,7 @@ def get_env_kwargs(env_name):
             'grad_norm_clipping': 10,
             'lander': True,
             'num_timesteps': 500000,
-            'env_wrappers': lunar_empty_wrapper
+            # 'env_wrappers': lunar_empty_wrapper
         }
         kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
 

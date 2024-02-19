@@ -128,14 +128,14 @@ class DQNAgent(object):
         ):
             # TODO fill in the call to the update function using the appropriate tensors
             log = self._critic.update(
-                ob_no, ac_na, re_n, next_ob_no, terminal_n
+                ob_no, ac_na, next_ob_no, re_n, terminal_n
             )
 
             # TODO update the target network periodically 
             # HINT: your critic already has this functionality implemented
-            if self.num_param_updates % self.target_update_freq == 0:
+            if self._num_param_updates % self._target_update_freq == 0:
                 self._critic.update_target_network()
 
-            self.num_param_updates += 1
+            self._num_param_updates += 1
         self._t += 1
         return log

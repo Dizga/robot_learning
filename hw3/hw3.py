@@ -104,15 +104,15 @@ def my_app(cfg: DictConfig):
     # just add these two lines at the top of
     # your training script:
     
-    experiment = comet_ml.Experiment(
-    api_key="z69lCbTtycAoAjmBUwqAgPmMv",
-    project_name="test"
-    )
-    experiment.add_tag("hw3")
-    experiment.set_name(exp_name)
-    experiment.set_filename(fname="cometML_test")
+    # experiment = comet_ml.Experiment(
+    # api_key="z69lCbTtycAoAjmBUwqAgPmMv",
+    # project_name="test"
+    # )
+    # experiment.add_tag("hw3")
+    # experiment.set_name(exp_name)
+    # experiment.set_filename(fname="cometML_test")
     
-    trainer.set_comet_logger(experiment)
+    # trainer.set_comet_logger(experiment)
     
     # Metrics from this training run will now be
     # available in the Comet UI

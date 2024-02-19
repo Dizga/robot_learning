@@ -71,7 +71,7 @@ class DQNCritic(BaseCritic):
         # TODO compute the Q-values from the target network 
         qa_tp1_values = self.q_net_target(next_ob_no)
 
-        if self.double_q:
+        if self._double_q:
             # You must fill this part for Q2 of the Q-learning portion of the homework.
             # In double Q-learning, the best action is selected using the Q-network that
             # is being updated, but the Q-value for this action is obtained from the
@@ -86,8 +86,8 @@ class DQNCritic(BaseCritic):
         # TODO compute targets for minimizing Bellman error
         # HINT: as you saw in lecture, this would be:
             #currentReward + self.gamma * qValuesOfNextTimestep * (not terminal)
-        target = reward_n + self._gamma * q_tp1 * (not terminal_n)
-        # target = reward_n + self._gamma * q_tp1 * (1 - terminal_n)
+        # target = reward_n + self._gamma * q_tp1 * (not terminal_n)
+        target = reward_n + self._gamma * q_tp1 * (1 - terminal_n)
         target = target.detach()
         
         assert q_t_values.shape == target.shape
@@ -95,7 +95,7 @@ class DQNCritic(BaseCritic):
 
         self.optimizer.zero_grad()
         loss.backward()
-        utils.clip_grad_value_(self.q_net.parameters(), self.grad_norm_clipping)
+        utils.clip_grad_value_(self.q_net.parameters(), self._grad_norm_clipping)
         self.optimizer.step()
         self.learning_rate_scheduler.step()
         return {
