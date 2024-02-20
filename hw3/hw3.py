@@ -10,7 +10,7 @@ from hw3.roble.agents.td3_agent import TD3Agent
 from hw3.roble.agents.sac_agent import SACAgent
 from hw3.roble.infrastructure.rl_trainer import RL_Trainer
 from omegaconf import DictConfig, OmegaConf
-from hw3.roble.infrastructure.dqn_utils import get_env_kwargs
+from hw3.roble.infrastructure.dqn_utils import get_env_kwargs, merge_params
 
 class OffPolicyTrainer(object):
     import hw1.roble.util.class_util as classu
@@ -21,7 +21,13 @@ class OffPolicyTrainer(object):
         ## SET AGENT PARAMS
         #####################
 
-        self._params['alg']['batch_size_initial'] = self._params['alg']['batch_size']
+        additional_params = get_env_kwargs(env_name=params['env']['env_name'])
+        if additional_params is not None:
+            self._params = merge_params(dict(self._params), dict(additional_params))
+            self._params['optimizer_spec'] = additional_params['optimizer_spec']
+            self._params['q_func'] = additional_params['q_func']
+            self._params["exploration_schedule"] = additional_params["exploration_schedule"]
+            self._params["env_wrappers"] = additional_params["env_wrappers"]
 
         if self._params['alg']['rl_alg'] == 'dqn':
             agent = DQNAgent
@@ -31,8 +37,6 @@ class OffPolicyTrainer(object):
             agent = TD3Agent    
         elif self._params['alg']['rl_alg'] == 'sac':
             agent = SACAgent
-        elif self._params['alg']['rl_alg'] == 'pg':
-            agent = PGAgent
         else:
             print("Pick a rl_alg first")
             sys.exit()

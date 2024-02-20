@@ -43,16 +43,16 @@ class RL_Trainer(RL_Trainer):
         
     def add_wrappers(self):
         # Make the gym environment
-        env_params = get_env_kwargs(self._params['env']['env_name'])
-        if 'env_wrappers' in env_params:
+        # env_params = get_env_kwargs(self._params['env']['env_name'])
+        if 'env_wrappers' in self._params:
             # These operations are currently only for Atari envs
-            self._env = wrappers.Monitor(
-                self._env,
-                os.path.join(self._params['logging']['logdir'], "gym"),
-                force=True,
-                video_callable=(None if self._params['logging']['video_log_freq'] > 0 else False),
-            )
-            self._env = env_params['env_wrappers'](self._env)
+            # self._env = wrappers.Monitor(
+            #     self._env,
+            #     os.path.join(self._params['logging']['logdir'], "gym"),
+            #     force=True,
+            #     video_callable=(None if self._params['logging']['video_log_freq'] > 0 else False),
+            # )
+            self._env = self._params['env_wrappers'](self._env)
         if 'non_atari_colab_env' in self._params and self._params['logging']['video_log_freq'] > 0:
             self._env = wrappers.Monitor(
                 self._env,
@@ -278,3 +278,11 @@ class RL_Trainer(RL_Trainer):
         
         print('Done logging ddpg...\n\n')
         
+    def collect_training_trajectories(
+            self,
+            itr,
+            collect_policy,
+            batch_size,
+            load_initial_expertdata=None
+    ):
+        return super().collect_training_trajectories(itr + 1, load_initial_expertdata, collect_policy, batch_size)

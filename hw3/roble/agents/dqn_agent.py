@@ -29,7 +29,7 @@ class DQNAgent(object):
         self._critic = DQNCritic(**kwargs)
         self._actor = ArgMaxPolicy(self._critic)
 
-        lander = self._env_name.startswith('LunarLander')
+        lander = True if "lander" in kwargs.keys() else False
         self._replay_buffer = MemoryOptimizedReplayBuffer(
             self._replay_buffer_size, self._frame_history_len, lander=lander)
         self._t = 0
