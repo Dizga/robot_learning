@@ -123,5 +123,5 @@ def my_app(cfg: DictConfig):
 
     
     data = trainer.run_training_loop()
-    print("Results: ", data)
+    # print("Results: ", data)
     return data

@@ -152,7 +152,7 @@ class RL_Trainer(RL_Trainer):
                     self._agent.save('{}/agent_itr_{}.pt'.format(self._params['logging']['logdir'], itr))
                     
         results = self._logger.get_table_dict()
-        print ("results: ", results)
+        # print ("results: ", results)
         return results
 
     def train_agent(self):

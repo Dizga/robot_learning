@@ -77,9 +77,9 @@ class DQNCritic(BaseCritic):
             # is being updated, but the Q-value for this action is obtained from the
             # target Q-network. Please review Lecture 8 for more details,
             # and page 4 of https://arxiv.org/pdf/1509.06461.pdf is also a good reference.
-            TODO
-            # _, best_actions = self.q_net(next_ob_no).max(dim=1, keepdim=True)
-            # q_tp1 = qa_tp1_values.gather(1, best_actions).squeeze()
+            # TODO
+            _, best_actions = self.q_net(next_ob_no).max(dim=1, keepdim=True)
+            q_tp1 = qa_tp1_values.gather(1, best_actions).squeeze()
         else:
             q_tp1, _ = qa_tp1_values.max(dim=1)
 

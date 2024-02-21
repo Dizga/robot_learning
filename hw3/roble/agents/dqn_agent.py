@@ -29,7 +29,8 @@ class DQNAgent(object):
         self._critic = DQNCritic(**kwargs)
         self._actor = ArgMaxPolicy(self._critic)
 
-        lander = True if "lander" in kwargs.keys() else False
+        # lander = True if "lander" in kwargs.keys() else False
+        lander = self._env_name.startswith('LunarLander')
         self._replay_buffer = MemoryOptimizedReplayBuffer(
             self._replay_buffer_size, self._frame_history_len, lander=lander)
         self._t = 0
@@ -119,13 +120,13 @@ class DQNAgent(object):
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
         log = {}
-        # if (self.t > self._learning_starts
-        #         and self._t % self._learning_freq == 0
-        #         and self._replay_buffer.can_sample(self.batch_size)
-        # ):
         if (self._t > self._learning_starts
                 and self._t % self._learning_freq == 0
+                and self._replay_buffer.can_sample(self._train_batch_size)
         ):
+        # if (self._t > self._learning_starts
+        #         and self._t % self._learning_freq == 0
+        # ):
             # TODO fill in the call to the update function using the appropriate tensors
             log = self._critic.update(
                 ob_no, ac_na, next_ob_no, re_n, terminal_n
