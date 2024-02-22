@@ -77,6 +77,14 @@ class DQNAgent(object):
         # self.replay_buffer_idx = -1
         self.replay_buffer_idx = self._replay_buffer.store_frame(self._last_obs)
 
+
+        # from PIL import Image
+        # I = np.squeeze(self._last_obs, axis=2)
+        # img = Image.fromarray(I)
+        # img.save("file.png")
+
+        self._last_obs
+
         eps = self._exploration_schedule.value(self._t)
 
         # TODO use epsilon greedy exploration when selecting action

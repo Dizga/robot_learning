@@ -61,7 +61,7 @@ def get_env_kwargs(env_name):
             'grad_norm_clipping': 10,
             'input_shape': (84, 84, 1),
             'env_wrappers': wrap_deepmind,
-            'frame_history_len': 1,
+            'frame_history_len': 4,
             'gamma': 0.99,
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['n_iter'])
@@ -121,7 +121,7 @@ class PreprocessAtari(nn.Module):
 def create_atari_q_network(ob_dim, num_actions):
     return nn.Sequential(
         PreprocessAtari(),
-        nn.Conv2d(in_channels=1, out_channels=32, kernel_size=8, stride=4),
+        nn.Conv2d(in_channels=4, out_channels=32, kernel_size=8, stride=4),
         nn.ReLU(),
         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
         nn.ReLU(),
@@ -383,6 +383,15 @@ class MemoryOptimizedReplayBuffer(object):
             Number of memories to be retried for each observation.
         """
 
+        self.next_idx      = 0
+        self.num_in_buffer = 0
+
+        self.obs      = None
+        self.action   = None
+        self.reward   = None
+        self.done     = None
+
+    def reset(self):
         self.next_idx      = 0
         self.num_in_buffer = 0
 

@@ -2,6 +2,8 @@ import numpy as np
 import time
 import copy
 
+from hw3.roble.infrastructure.dqn_utils import MemoryOptimizedReplayBuffer
+
 ############################################
 ############################################
 
@@ -54,13 +56,11 @@ def mean_squared_error(a, b):
 ############################################
 ############################################
 
-def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array')):
+def sample_trajectory(buffer: MemoryOptimizedReplayBuffer, env, policy, max_path_length, render=False, render_mode=('rgb_array')):
     # TODO: get this from previous assignment
 
     ob = env.reset()
-    lander = self._env_name.startswith('LunarLander')
-    self._replay_buffer = MemoryOptimizedReplayBuffer(
-        self._replay_buffer_size, self._frame_history_len, lander=lander)
+    buffer.reset()
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
     steps = 0
     while True:
@@ -76,11 +76,13 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
             if 'human' in render_mode:
                 env.render(mode=render_mode)
                 time.sleep(env.model.opt.timestep)
+        bif = buffer.store_frame(ob)
         obs.append(ob)
-        ac = policy.get_action(ob)
-        ac = ac
+        ac = policy.get_action(buffer.encode_recent_observation())
+        # ac = ac
         acs.append(ac)
         ob, rew, done, _ = env.step(ac)
+        buffer.store_effect(bif, ac, rew, done)
         # add the observation after taking a step to next_obs
         next_obs.append(ob)
         rewards.append(rew)
@@ -111,6 +113,26 @@ def Path(obs, image_obs, acs, rewards, next_obs, terminals):
             "action" : np.array(acs, dtype=np.float32),
             "next_observation": np.array(next_obs, dtype=np.float32),
             "terminal": np.array(terminals, dtype=np.float32)}
+
+
+def sample_trajectories(buffer, env, policy, min_timesteps_per_batch, max_path_length, render=False, render_mode=('rgb_array')):
+    """
+        Collect rollouts until we have collected min_timesteps_per_batch steps.
+
+        TODO implement this function
+        Hint1: use sample_trajectory to get each path (i.e. rollout) that goes into paths
+        Hint2: use get_pathlength to count the timesteps collected in each path
+    """
+    timesteps_this_batch = 0
+    paths = []
+    while timesteps_this_batch < min_timesteps_per_batch:
+        #collect rollout
+        path = sample_trajectory(buffer, env, policy, max_path_length, render, render_mode)
+        paths.append(path)
+        #count steps
+        timesteps_this_batch += get_pathlength(path)
+        # print('At timestep:    ', timesteps_this_batch, '/', min_timesteps_per_batch, end='\r')
+    return paths, timesteps_this_batch
 
 
 def convert_listofrollouts(paths):
