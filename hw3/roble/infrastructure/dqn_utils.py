@@ -77,15 +77,16 @@ def get_env_kwargs(env_name):
             'batch_size': 32,
             'gamma': 0.99,
             'learning_starts': 30000,
-            'learning_freq': 4,
+            'learning_freq': 2,
             'frame_history_len': 1,
-            'target_update_freq': 3000,
+            'target_update_freq': 5000,
             'grad_norm_clipping': 10,
             'lander': True,
-            'n_iter': 3000000,
+            'n_iter': 500001,
+            'n_exp': 3000000,
             'env_wrappers': lunar_empty_wrapper
         }
-        kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['n_iter'])
+        kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['n_exp'])
 
     else:
         raise NotImplementedError
