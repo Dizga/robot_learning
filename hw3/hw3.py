@@ -21,13 +21,17 @@ class OffPolicyTrainer(object):
         ## SET AGENT PARAMS
         #####################
 
-        additional_params = get_env_kwargs(env_name=params['env']['env_name'])
-        if additional_params is not None:
-            self._params = merge_params(dict(self._params), dict(additional_params))
-            self._params['optimizer_spec'] = additional_params['optimizer_spec']
-            self._params['q_func'] = additional_params['q_func']
-            self._params["exploration_schedule"] = additional_params["exploration_schedule"]
-            self._params["env_wrappers"] = additional_params["env_wrappers"]
+
+        try:
+            additional_params = get_env_kwargs(env_name=params['env']['env_name'])
+            if additional_params is not None:
+                self._params = merge_params(dict(self._params), dict(additional_params))
+                self._params['optimizer_spec'] = additional_params['optimizer_spec']
+                self._params['q_func'] = additional_params['q_func']
+                self._params["exploration_schedule"] = additional_params["exploration_schedule"]
+                self._params["env_wrappers"] = additional_params["env_wrappers"]
+        except:
+            pass
 
         if self._params['alg']['rl_alg'] == 'dqn':
             agent = DQNAgent

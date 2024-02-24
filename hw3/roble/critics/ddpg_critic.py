@@ -21,8 +21,8 @@ class DDPGCritic(BaseCritic):
 
         if isinstance(self._ob_dim, int):
             self._input_shape = (self._ob_dim,)
-        else:
-            self._input_shape = agent_params['input_shape']
+        # else:
+        #     self._input_shape = agent_params['input_shape']
 
         out_size = 1
 
@@ -74,21 +74,21 @@ class DDPGCritic(BaseCritic):
         terminal_n = ptu.from_numpy(terminal_n)
         
         ### Hint: 
-        # qa_t_values = self._q_net(ob_no, ac_na)
-        qa_t_values = TODO
+        qa_t_values = self._q_net(ob_no, ac_na).squeeze()
+        # qa_t_values = TODO
         
         # TODO compute the Q-values from the target network 
         ## Hint: you will need to use the target policy
-        qa_tp1_values = TODO
+        qa_tp1_values = self._q_net_target(next_ob_no, self._actor_target(next_ob_no)).squeeze()
 
         # TODO compute targets for minimizing Bellman error
         # HINT: as you saw in lecture, this would be:
             #currentReward + self._gamma * qValuesOfNextTimestep * (not terminal)
-        target = TODO
+        target = reward_n + self._gamma * qa_tp1_values * (1 - terminal_n)
         target = target.detach()
         
-        assert q_t_values.shape == target.shape
-        loss = self._loss(q_t_values, target)
+        assert qa_t_values.shape == target.shape
+        loss = self._loss(qa_t_values, target)
 
         self._optimizer.zero_grad()
         loss.backward()
@@ -97,26 +97,31 @@ class DDPGCritic(BaseCritic):
         #self._learning_rate_scheduler.step()
         return {
             "Training Loss": ptu.to_numpy(loss),
-            "Q Predictions": np.mean(ptu.to_numpy(q_t_values)),
+            "Q Predictions": np.mean(ptu.to_numpy(qa_t_values)),
             "Q Targets": np.mean(ptu.to_numpy(target)),
             # "Policy Actions": utilss.flatten(ptu.to_numpy(ac_na)),
             # "Actor Actions": utilss.flatten(ptu.to_numpy(self._actor(ob_no)))
         }
 
-    def update_target_network(self):
-        for target_param, param in zip(
-                self._q_net_target.parameters(), self._q_net.parameters()
-        ):
-            ## Perform Polyak averaging
-            y = TODO
+    def update_target_network(self, update_q_fun):
+
+        if update_q_fun:
+            for target_param, param in zip(
+                    self._q_net_target.parameters(), self._q_net.parameters()
+            ):
+                ## Perform Polyak averaging
+                # y = TODO
+                target_param.data.copy_(self._polyak_avg * param.data + (1 - self._polyak_avg) * target_param.data)
+
         for target_param, param in zip(
                 self._actor_target.parameters(), self._actor.parameters()
         ):
             ## Perform Polyak averaging for the target policy
-            y = TODO
+            # y = TODO
+            target_param.data.copy_(self._polyak_avg * param.data + (1 - self._polyak_avg) * target_param.data)
 
     def qa_values(self, obs):
         obs = ptu.from_numpy(obs)
         ## HINT: the q function take two arguments  
-        qa_values = TODO
+        qa_values = self._q_net(obs, self._actor(obs))
         return ptu.to_numpy(qa_values)

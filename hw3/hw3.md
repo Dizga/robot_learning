@@ -110,15 +110,15 @@ seeds for both DQN and DDQN. You may use `LunarLander-v3` for this
 question. The final results should use the following experiment names:
 
 ``` {.bash language="bash" breaklines="true"}
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_1 logging.seed=1
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_2 logging.seed=2
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_3 logging.seed=3
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_1 logging.random_seed=1
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_2 logging.random_seed=2
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_dqn_3 logging.random_seed=3
 ```
 
 ``` {.bash language="bash" breaklines="true"}
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_1 alg.double_q=true logging.seed=1
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_2 alg.double_q=true logging.seed=2
-python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_3 alg.double_q=true logging.seed=3
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_1 alg.double_q=true logging.random_seed=1
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_2 alg.double_q=true logging.random_seed=2
+python run_hw3_ql.py env.env_name=LunarLander-v3 env.exp_name=q2_doubledqn_3 alg.double_q=true logging.random_seed=3
 ```
 
 Submit the run logs for all the experiments above. In your report, make

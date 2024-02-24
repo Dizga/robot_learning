@@ -1,4 +1,5 @@
 import abc
+import copy
 import itertools
 import numpy as np
 import torch
@@ -33,14 +34,33 @@ class MLPPolicyDeterministic(MLPPolicy):
     import hw1.roble.util.class_util as classu
     @classu.hidden_member_initialize
     def __init__(self, *args, **kwargs):
+        kwargs = copy.deepcopy(kwargs)
         kwargs['deterministic'] = True
+        kwargs['network']['output_activation']='tanh'
         super().__init__(*args, **kwargs)
         
     def update(self, observations, q_fun):
+
+        observations = ptu.from_numpy(observations)
+
+        self._optimizer.zero_grad()
         # TODO: update the policy and return the loss
         ## Hint you will need to use the q_fun for the loss
         ## Hint: do not update the parameters for q_fun in the loss
+        q_values = q_fun._q_net(observations, self(observations))
+
+        loss = -q_values.mean()
+
+        # Compute gradients
+        loss.backward()
+
+        # Update policy parameters
+        self._optimizer.step()
+
         return {"Loss": loss.item()}
+    
+    # def forward(self, observation: torch.FloatTensor):
+    #     return 3.0 * super().forward(observation)
     
 class MLPPolicyStochastic(MLPPolicy):
     """

@@ -79,7 +79,7 @@ def sample_trajectory(buffer: MemoryOptimizedReplayBuffer, env, policy, max_path
         bif = buffer.store_frame(ob)
         obs.append(ob)
         ac = policy.get_action(buffer.encode_recent_observation())
-        # ac = ac
+        ac = ac[0]
         acs.append(ac)
         ob, rew, done, _ = env.step(ac)
         buffer.store_effect(bif, ac, rew, done)

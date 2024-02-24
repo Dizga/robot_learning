@@ -13,6 +13,7 @@ from hw1.roble.infrastructure import utils
 from hw3.roble.agents.dqn_agent import DQNAgent
 from hw3.roble.agents.ddpg_agent import DDPGAgent
 from hw3.roble.infrastructure.dqn_utils import (
+        MemoryOptimizedReplayBuffer,
         get_env_kwargs,
         get_wrapper_by_name,
         register_custom_envs,
@@ -21,7 +22,7 @@ from hw2.roble.infrastructure.rl_trainer import RL_Trainer
 
 # how many rollouts to save as videos
 MAX_NVIDEO = 1
-MAX_VIDEO_LEN = 80 # we overwrite this in the code below
+MAX_VIDEO_LEN = 300 # we overwrite this in the code below
 
 class RL_Trainer(RL_Trainer):
     import hw1.roble.util.class_util as classu
@@ -269,20 +270,152 @@ class RL_Trainer(RL_Trainer):
         
         paths, envsteps_this_batch, train_video_paths = (
                     self.collect_training_trajectories(
-                         itr,
+                         itr+1,
                         load_initial_expertdata = False, 
                         collect_policy=eval_policy, 
                         batch_size=self._params['alg']['eval_batch_size'])
                 )
-        super().perform_logging(itr, paths, eval_policy, train_video_paths, all_logs)
+        # super().perform_logging(itr, paths, eval_policy, train_video_paths, all_logs)
+        self.perform_slogging(itr, paths, eval_policy, train_video_paths, all_logs)
         
         print('Done logging ddpg...\n\n')
         
+    # def collect_training_trajectories(
+    #         self,
+    #         itr,
+    #         collect_policy,
+    #         batch_size,
+    #         load_initial_expertdata=None
+    # ):
+    #     return super().collect_training_trajectories(itr + 1, load_initial_expertdata, collect_policy, batch_size)
+    
     def collect_training_trajectories(
             self,
             itr,
+            load_initial_expertdata,
             collect_policy,
             batch_size,
-            load_initial_expertdata=None
     ):
-        return super().collect_training_trajectories(itr + 1, load_initial_expertdata, collect_policy, batch_size)
+        from hw3.roble.infrastructure import utils
+        """
+        :param itr:
+        :param load_initial_expertdata:  path to expert data pkl file
+        :param collect_policy:  the current policy using which we collect data
+        :param batch_size:  the number of transitions we collect
+        :return:
+            paths: a list trajectories
+            envsteps_this_batch: the sum over the numbers of environment steps in paths
+            train_video_paths: paths which also contain videos for visualization purposes
+        """
+
+        if itr == 0:
+            if load_initial_expertdata:
+                paths = pickle.load(open(self._params['env']['expert_data'], 'rb'))
+                return paths, 0, None
+            else:
+                num_transitions_to_sample = self._params['alg']['batch_size_initial']
+        else:
+            num_transitions_to_sample = self._params['alg']['batch_size']
+
+        lander = self._params['env']['env_name'].startswith('LunarLander')
+        try:
+            env_params = get_env_kwargs(self._params['env']['env_name'])
+            buffer = MemoryOptimizedReplayBuffer(
+                env_params['replay_buffer_size'], env_params['frame_history_len'], lander=lander)
+        except:
+            buffer = MemoryOptimizedReplayBuffer(
+                self._params['alg']['replay_buffer_size'], self._params['alg']['frame_history_len'], lander=True)
+    
+        print("\nCollecting data to be used for training...")
+        paths, envsteps_this_batch = utils.sample_trajectories(buffer,
+            self._env, collect_policy, num_transitions_to_sample, self._params['env']['max_episode_length'])
+        # collect more rollouts with the same policy, to be saved as videos in tensorboard
+        # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
+
+        train_video_paths = None
+        if self._log_video:
+            print('\nCollecting train rollouts to be used for saving videos...')
+
+            # train_video_paths = utils.sample_n_trajectories(self._env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+            train_video_paths, _ = utils.sample_trajectories(buffer,self._env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+        return paths, envsteps_this_batch, train_video_paths
+    
+    def perform_slogging(self, itr, paths, eval_policy, train_video_paths, all_logs):
+
+        last_log = all_logs[-1]
+
+        #######################
+        from hw3.roble.infrastructure import utils
+
+        # collect eval trajectories, for logging
+        lander = self._params['env']['env_name'].startswith('LunarLander')
+        try:
+            env_params = get_env_kwargs(self._params['env']['env_name'])
+            buffer = MemoryOptimizedReplayBuffer(
+                env_params['replay_buffer_size'], env_params['frame_history_len'], lander=lander)
+        except:
+            buffer = MemoryOptimizedReplayBuffer(
+                self._params['alg']['replay_buffer_size'], self._params['alg']['frame_history_len'], lander=True)
+        print("\nCollecting data for eval...")
+        eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(buffer, self._env, eval_policy, 
+                                                                         self._params['alg']['eval_batch_size'], 
+                                                                         self._params['env']['max_episode_length'])
+
+        # save eval rollouts as videos in the video folder (for grading)
+        if self._log_video:
+            if train_video_paths is not None:
+                #save train/eval videos
+                print('\nSaving train rollouts as videos...')
+                self._logger.log_paths_as_videos(train_video_paths, itr, fps=self._fps, max_videos_to_save=MAX_NVIDEO,
+                                            video_title='train_rollouts')
+            
+            print('\nCollecting video rollouts eval')
+            eval_video_paths, _  = utils.sample_trajectories(buffer,self._env, eval_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
+            print('\nSaving eval rollouts as videos...')
+            self._logger.log_paths_as_videos(eval_video_paths, itr, fps=self._fps,max_videos_to_save=MAX_NVIDEO,
+                                            video_title='eval_rollouts')
+        #######################
+
+        # save eval metrics
+        if self._log_metrics:
+            # returns, for logging
+            train_returns = [path["reward"].sum() for path in paths]
+            eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
+
+            # episode lengths, for logging
+            train_ep_lens = [len(path["reward"]) for path in paths]
+            eval_ep_lens = [len(eval_path["reward"]) for eval_path in eval_paths]
+
+            # decide what to log
+            logs = OrderedDict()
+            logs["Eval_AverageReturn"] = np.mean(eval_returns)
+            logs["Eval_StdReturn"] = np.std(eval_returns)
+            logs["Eval_MaxReturn"] = np.max(eval_returns)
+            logs["Eval_MinReturn"] = np.min(eval_returns)
+            logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
+
+            logs["Train_AverageReturn"] = np.mean(train_returns)
+            logs["Train_StdReturn"] = np.std(train_returns)
+            logs["Train_MaxReturn"] = np.max(train_returns)
+            logs["Train_MinReturn"] = np.min(train_returns)
+            logs["Train_AverageEpLen"] = np.mean(train_ep_lens)
+
+            # logs["Train_EnvstepsSoFar"] = self._total_envsteps
+            # logs["Train_AverageRewardSoFar"] = self._total_train_rewards / self._total_envsteps
+            # logs["Eval_AverageRewardSoFar"] = self._total_eval_rewards / self._total_envsteps
+            # logs["TimeSinceStart"] = time.time() - self._start_time
+            logs.update(last_log)
+
+            if itr == 0:
+                self._initial_return = np.mean(train_returns)
+            logs["Initial_DataCollection_AverageReturn"] = self._initial_return
+
+            # perform the logging
+            # for key, value in logs.items():
+            #     print('{} : {}'.format(key, value))
+            #     self._logger.log_file(value, key,itr)
+            #     self._logger.log_scalar(value, key, itr)
+                
+            self._logger.record_dict(logs, prefix='trainer/')
+            self._logger.dump_tabular(with_prefix=False, with_timestamp=False)
+            print('Done logging MBRL...\n\n')

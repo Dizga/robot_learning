@@ -23,7 +23,7 @@ register_envs()
 
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 1
-MAX_VIDEO_LEN = 600 # we overwrite this in the code below
+MAX_VIDEO_LEN = 100 # we overwrite this in the code below
 
 class RL_Trainer(RL_Trainer):
     import hw1.roble.util.class_util as classu
