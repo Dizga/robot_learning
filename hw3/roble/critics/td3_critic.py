@@ -17,11 +17,6 @@ class TD3Critic(DDPGCritic):
     @classu.hidden_member_initialize
     def __init__(self, actor, **kwargs):
         super().__init__(actor, **kwargs)
-
-        self._q_net_target2 = ConcatMLP(   
-                **kwargs
-            )
-        
         
 
     def update(self, ob_no, ac_na, next_ob_no, reward_n, terminal_n):
@@ -52,7 +47,7 @@ class TD3Critic(DDPGCritic):
         # TODO compute the Q-values from the target network 
         ## Hint: you will need to use the target policy
         noise = (torch.randn_like(ac_na) * self._td3_target_policy_noise).clamp(-self._td3_target_policy_noise_clip, self._td3_target_policy_noise_clip)
-        next_actions = (self.actor_target(next_ob_no) + noise).clamp(-self._max_action_value, self._max_action_value)
+        next_actions = (self._actor_target(next_ob_no) + noise).clamp(-self._max_action_value, self._max_action_value)
 
         # with torch.no_grad():
         #     qa_tp1_values1 = self.q_net_target(next_ob_no, action).squeeze()
@@ -68,12 +63,12 @@ class TD3Critic(DDPGCritic):
         target = target.detach()
 
         assert qa_t_values.shape == target.shape
-        loss = self.loss(qa_t_values, target)
+        loss = self._loss(qa_t_values, target)
 
-        self.optimizer.zero_grad()
+        self._optimizer.zero_grad()
         loss.backward()
-        utils.clip_grad_value_(self.q_net.parameters(), self.grad_norm_clipping)
-        self.optimizer.step()
+        utils.clip_grad_value_(self._q_net.parameters(), self._grad_norm_clipping)
+        self._optimizer.step()
         # self.learning_rate_scheduler.step()
         return {
             "Training Loss": ptu.to_numpy(loss),
@@ -83,6 +78,6 @@ class TD3Critic(DDPGCritic):
             # "Actor Actions": utilss.flatten(ptu.to_numpy(self._actor(ob_no)))
         }
 
-    def update_target_network(self):
-        pass
+    # def update_target_network(self):
+    #     pass
 

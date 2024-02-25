@@ -76,7 +76,10 @@ class MLPPolicyStochastic(MLPPolicy):
     def get_action(self, obs: np.ndarray) -> np.ndarray:
         # TODO: sample actions from the gaussian distribrution given by MLPPolicy policy when providing the observations.
         # Hint: make sure to use the reparameterization trick to sample from the distribution
-        
+
+        obs = ptu.from_numpy(obs).float()
+        action_distribution = self.forward(obs)
+        action = action_distribution.sample()
         return ptu.to_numpy(action)
         
     def update(self, observations, q_fun):
@@ -84,6 +87,26 @@ class MLPPolicyStochastic(MLPPolicy):
         ## Hint you will need to use the q_fun for the loss
         ## Hint: do not update the parameters for q_fun in the loss
         ## Hint: you will have to add the entropy term to the loss using self.entropy_coeff
+        observations = ptu.from_numpy(observations).float()
+        action_distribution = self.forward(observations)
+        actions = action_distribution.rsample()
+        log_probs = action_distribution.log_prob(actions)
+
+        q_values = q_fun._q_net(observations, actions).detach()
+        loss = -(q_values - self.entropy_coeff * log_probs).mean()
+
+        # Optimize the policy
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
         return {"Loss": loss.item()}
+    
+    # def forward(self, observation: torch.FloatTensor):
+    #     action_distribution = super().self.forward(observation)
+    #     actions = action_distribution.rsample()
+    #     log_probs = action_distribution.log_prob(actions)
+    #     actions = torch.tanh(actions) * self._max_action_value
+    #     log_probs -= torch.log(1 - actions.pow(2) + 1e-7)
+    #     return actions, log_probs
     
 #####################################################
