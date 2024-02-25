@@ -59,8 +59,8 @@ class MLPPolicyDeterministic(MLPPolicy):
 
         return {"Loss": loss.item()}
     
-    # def forward(self, observation: torch.FloatTensor):
-    #     return 3.0 * super().forward(observation)
+    def forward(self, observation: torch.FloatTensor):
+        return 3.0 * super().forward(observation)
     
 class MLPPolicyStochastic(MLPPolicy):
     """

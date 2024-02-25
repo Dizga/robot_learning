@@ -127,7 +127,7 @@ class DQNAgent(object):
             return [],[],[],[],[]
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
-        log = {}
+        log = {'Training Loss': None}
         if (self._t > self._learning_starts
                 and self._t % self._learning_freq == 0
                 and self._replay_buffer.can_sample(self._train_batch_size)

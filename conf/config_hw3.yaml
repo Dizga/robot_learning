@@ -19,7 +19,7 @@ alg:
     target_update_freq: 1
     exploration_schedule: 0
     optimizer_spec:  0
-    replay_buffer_size: 50000
+    replay_buffer_size: 1000000
     frame_history_len: 1
     gamma: 0.95
     critic_learning_rate: 1e-3
@@ -43,8 +43,8 @@ alg:
         output_activation: "identity"
 
 logging:
-    video_log_freq: 10000 # How often to generate a video to log/
-    scalar_log_freq: 4000 # How often to log training information and run evaluation during training.
+    video_log_freq: 30000 # How often to generate a video to log/
+    scalar_log_freq: 2000 # How often to log training information and run evaluation during training.
     save_params: false # Should the parameters given to the script be saved? (Always...)
     random_seed: 12345
     logdir: ""
