@@ -60,7 +60,7 @@ class MLPPolicyDeterministic(MLPPolicy):
         return {"Loss": loss.item()}
     
     def forward(self, observation: torch.FloatTensor):
-        return 3.0 * super().forward(observation)
+        return self._max_action_value * super().forward(observation)
     
 class MLPPolicyStochastic(MLPPolicy):
     """

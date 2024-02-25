@@ -1,3 +1,4 @@
+from hw2.roble.infrastructure.utils import add_noise
 from .ddpg_critic import DDPGCritic
 import torch
 import torch.optim as optim
@@ -16,6 +17,10 @@ class TD3Critic(DDPGCritic):
     @classu.hidden_member_initialize
     def __init__(self, actor, **kwargs):
         super().__init__(actor, **kwargs)
+
+        self._q_net_target2 = ConcatMLP(   
+                **kwargs
+            )
         
         
 
@@ -42,20 +47,28 @@ class TD3Critic(DDPGCritic):
         reward_n = ptu.from_numpy(reward_n)
         terminal_n = ptu.from_numpy(terminal_n)
 
-        qa_t_values = TODO
+        qa_t_values = self._q_net(ob_no, ac_na).squeeze()
         
         # TODO compute the Q-values from the target network 
         ## Hint: you will need to use the target policy
-        qa_tp1_values = TODO
+        noise = (torch.randn_like(ac_na) * self._td3_target_policy_noise).clamp(-self._td3_target_policy_noise_clip, self._td3_target_policy_noise_clip)
+        next_actions = (self.actor_target(next_ob_no) + noise).clamp(-self._max_action_value, self._max_action_value)
+
+        # with torch.no_grad():
+        #     qa_tp1_values1 = self.q_net_target(next_ob_no, action).squeeze()
+        #     qa_tp1_values2 = self.q_net_target2(next_ob_no, action).squeeze()
+        #     qa_tp1_values = torch.min(qa_tp1_values1, qa_tp1_values2)
+
+        qa_tp1_values = self._q_net_target(next_ob_no, next_actions).squeeze()
 
         # TODO compute targets for minimizing Bellman error
         # HINT: as you saw in lecture, this would be:
             #currentReward + self.gamma * qValuesOfNextTimestep * (not terminal)
-        target = TODO
+        target = reward_n + self._gamma * qa_tp1_values * (1 - terminal_n)
         target = target.detach()
 
-        assert q_t_values.shape == target.shape
-        loss = self.loss(q_t_values, target)
+        assert qa_t_values.shape == target.shape
+        loss = self.loss(qa_t_values, target)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -64,7 +77,7 @@ class TD3Critic(DDPGCritic):
         # self.learning_rate_scheduler.step()
         return {
             "Training Loss": ptu.to_numpy(loss),
-            "Q Predictions": np.mean(ptu.to_numpy(q_t_values)),
+            "Q Predictions": np.mean(ptu.to_numpy(qa_t_values)),
             "Q Targets": np.mean(ptu.to_numpy(target)),
             # "Policy Actions": utilss.flatten(ptu.to_numpy(ac_na)),
             # "Actor Actions": utilss.flatten(ptu.to_numpy(self._actor(ob_no)))

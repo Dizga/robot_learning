@@ -89,6 +89,9 @@ class RL_Trainer(object):
         ## the **self._params['alg'] is a hack to allow new updates to use kwargs nicely
         combined_params = dict(self._params['alg'].copy())
         combined_params.update(self._params["env"])
+        if not self._params['alg']['discrete']:
+            max_action_value = self._env.action_space.high[0]
+            combined_params.update({'max_action_value': max_action_value})
             
         # env_params = get_env_kwargs(self._params['env']['env_name'])
         # self.add_wrappers()
