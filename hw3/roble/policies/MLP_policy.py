@@ -78,8 +78,9 @@ class MLPPolicyStochastic(MLPPolicy):
         # Hint: make sure to use the reparameterization trick to sample from the distribution
 
         obs = ptu.from_numpy(obs).float()
-        action_distribution = self.forward(obs)
-        action = action_distribution.sample()
+        # action_distribution = self.forward(obs)
+        # action = action_distribution.sample()
+        action, _ = self.forward(obs)
         return ptu.to_numpy(action)
         
     def update(self, observations, q_fun):
@@ -88,25 +89,28 @@ class MLPPolicyStochastic(MLPPolicy):
         ## Hint: do not update the parameters for q_fun in the loss
         ## Hint: you will have to add the entropy term to the loss using self.entropy_coeff
         observations = ptu.from_numpy(observations).float()
-        action_distribution = self.forward(observations)
-        actions = action_distribution.rsample()
-        log_probs = action_distribution.log_prob(actions)
+        # action_distribution = self.forward(observations)
+        # actions = action_distribution.rsample()
+        # log_probs = action_distribution.log_prob(actions)
 
-        q_values = q_fun._q_net(observations, actions).detach()
+        actions, log_probs = self.forward(observations)
+
+        q_values = q_fun._q_net(observations, actions)
         loss = -(q_values - self.entropy_coeff * log_probs).mean()
 
         # Optimize the policy
-        self.optimizer.zero_grad()
+        self._optimizer.zero_grad()
         loss.backward()
-        self.optimizer.step()
+        self._optimizer.step()
         return {"Loss": loss.item()}
     
-    # def forward(self, observation: torch.FloatTensor):
-    #     action_distribution = super().self.forward(observation)
-    #     actions = action_distribution.rsample()
-    #     log_probs = action_distribution.log_prob(actions)
-    #     actions = torch.tanh(actions) * self._max_action_value
-    #     log_probs -= torch.log(1 - actions.pow(2) + 1e-7)
-    #     return actions, log_probs
+    def forward(self, observation: torch.FloatTensor):
+        action_distribution = super().forward(observation)
+        actions = action_distribution.rsample()
+        log_probs = action_distribution.log_prob(actions)
+        actions = torch.tanh(actions)
+        log_probs -= torch.log(1 - actions.pow(2) + 1e-7)
+        actions = actions * self._max_action_value
+        return actions, log_probs.detach()
     
 #####################################################

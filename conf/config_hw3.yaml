@@ -13,7 +13,7 @@ alg:
     num_critic_updates_per_agent_update: 1 ## Number of training updates after #batch_size experience is collected.
     use_gpu: True
     gpu_id: 0
-    rl_alg: 'ddpg' ## RL training algorithm ['dqn', 'ddpg', 'td3', 'sac']
+    rl_alg: 'sac' ## RL training algorithm ['dqn', 'ddpg', 'td3', 'sac']
     learning_starts: 10000  ## How much initial experience to collect before training begins
     learning_freq: 1 
     target_update_freq: 1
