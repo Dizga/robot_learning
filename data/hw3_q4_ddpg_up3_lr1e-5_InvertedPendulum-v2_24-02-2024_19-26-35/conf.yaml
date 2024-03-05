@@ -1,0 +1,53 @@
+env:
+  env_name: InvertedPendulum-v2
+  max_episode_length: 300
+  exp_name: q4_ddpg_up3_lr1e-5
+  atari: false
+alg:
+  double_q: true
+  batch_size: 64
+  train_batch_size: 64
+  eval_batch_size: 4096
+  num_agent_train_steps_per_iter: 3
+  num_critic_updates_per_agent_update: 2
+  use_gpu: true
+  gpu_id: 0
+  rl_alg: ddpg
+  learning_starts: 10000
+  learning_freq: 1
+  target_update_freq: 1
+  exploration_schedule: 0
+  optimizer_spec: 0
+  replay_buffer_size: 1000000
+  frame_history_len: 1
+  gamma: 0.95
+  critic_learning_rate: 0.001
+  learning_rate: 1.0e-05
+  ob_dim: 0
+  ac_dim: 0
+  batch_size_initial: 0
+  discrete: true
+  grad_norm_clipping: true
+  n_iter: 60001
+  polyak_avg: 0.01
+  td3_target_policy_noise: 0.1
+  td3_target_policy_noise_clip: 0.1
+  entropy_coeff: 0.2
+  policy_std: 0.1
+  nn_baseline: false
+  deterministic: true
+  network:
+    layer_sizes:
+    - 64
+    - 64
+    activations:
+    - tanh
+    - tanh
+    output_activation: identity
+logging:
+  video_log_freq: 30000
+  scalar_log_freq: 2000
+  save_params: false
+  random_seed: 12345
+  logdir: /Users/alexandreganito/Documents/Cours/RWA/roboto/hw3/../data/hw3_q4_ddpg_up3_lr1e-5_InvertedPendulum-v2_24-02-2024_19-26-35
+  exp_name: hw3_q4_ddpg_up3_lr1e-5_InvertedPendulum-v2_24-02-2024_19-26-35

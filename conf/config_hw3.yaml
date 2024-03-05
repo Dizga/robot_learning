@@ -1,6 +1,6 @@
 env:
     env_name: 'InvertedPendulum-v2' # ['LunarLander-v3', 'MsPacman-v0', 'HalfCheetah-v2', 'CartPole-v0']
-    max_episode_length: 300
+    max_episode_length: 500
     exp_name: 'q1'
     atari: True
 
@@ -29,7 +29,7 @@ alg:
     batch_size_initial: 0 # do not modify
     discrete: True
     grad_norm_clipping: True
-    n_iter: 60001
+    n_iter: 90001
     polyak_avg: 0.01 #
     td3_target_policy_noise: 0.1 #
     td3_target_policy_noise_clip: 0.1 #

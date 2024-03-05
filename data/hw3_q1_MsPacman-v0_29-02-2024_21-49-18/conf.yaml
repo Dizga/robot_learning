@@ -1,0 +1,53 @@
+env:
+  env_name: MsPacman-v0
+  max_episode_length: 200
+  exp_name: q1
+  atari: true
+alg:
+  double_q: false
+  batch_size: 64
+  train_batch_size: 64
+  eval_batch_size: 4096
+  num_agent_train_steps_per_iter: 2
+  num_critic_updates_per_agent_update: 2
+  use_gpu: true
+  gpu_id: 0
+  rl_alg: dqn
+  learning_starts: 80000
+  learning_freq: 4
+  target_update_freq: 3000
+  exploration_schedule: 0
+  optimizer_spec: 0
+  replay_buffer_size: 1000000
+  frame_history_len: 4
+  gamma: 0.99
+  critic_learning_rate: 0.001
+  learning_rate: 0.0001
+  ob_dim: 0
+  ac_dim: 0
+  batch_size_initial: 0
+  discrete: true
+  grad_norm_clipping: 10
+  n_iter: 200000000
+  polyak_avg: 0.01
+  td3_target_policy_noise: 0.1
+  td3_target_policy_noise_clip: 0.1
+  entropy_coeff: 0.2
+  policy_std: 0.1
+  nn_baseline: false
+  deterministic: true
+  network:
+    layer_sizes:
+    - 64
+    - 64
+    activations:
+    - tanh
+    - tanh
+    output_activation: identity
+logging:
+  video_log_freq: 50000
+  scalar_log_freq: 10000
+  save_params: false
+  random_seed: 12
+  logdir: /home/mila/a/alexandre.ganito/work/rwa/robot_learning/hw3/../data/hw3_q1_MsPacman-v0_29-02-2024_21-49-18
+  exp_name: hw3_q1_MsPacman-v0_29-02-2024_21-49-18
