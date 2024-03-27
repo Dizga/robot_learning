@@ -40,9 +40,9 @@ class RL_Trainer(object):
                     and k != 'env_wrappers' \
                         and k != 'exploration_schedule':
                 config_snapshot[k] = v
-        with open(self._params['logging']['logdir']+"/conf.yaml", "w") as fd:
-            fd.write(OmegaConf.to_yaml(OmegaConf.create(config_snapshot)))
-            fd.flush()
+        # with open(self._params['logging']['logdir']+"/conf.yaml", "w") as fd:
+        #     fd.write(OmegaConf.to_yaml(OmegaConf.create(config_snapshot)))
+        #     fd.flush()
 
         # Set random seeds
         seed = self._params['logging']['random_seed']
